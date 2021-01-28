@@ -23,12 +23,6 @@ variable "aws_az" {
   description = "AWS Availability Zone in which the site will be created"
 }
 
-variable "aws_eks_cidr" {
-  type        = string
-  description = "EKS CIDR"
-  default     = "192.168.1.0/24"
-}
-
 variable "aws_vpc_cidr" {
   type        = string
   description = "AWS VPC CIDR, that will be used to create the vpc while creating the site"
@@ -47,14 +41,29 @@ variable "aws_instance_type" {
   default     = "t3.2xlarge"
 }
 
-variable "aws_subnet_cidr" {
+variable "aws_subnet_ce_cidr" {
   type        = map(string)
-  description = "Map to hold different cidr with key as name of subnet"
+  description = "Map to hold different CE cidr with key as name of subnet"
   default = {
     "outside"  = "192.168.0.0/25"
     "inside"   = "192.168.0.192/26"
     "workload" = "192.168.0.128/26"
   }
+}
+
+variable "aws_subnet_eks_cidr" {
+  type        = map(string)
+  description = "Map to hold different EKS cidr with key as desired AZ on which the subnet should exist"
+  default = {
+    "us-east-2a" = "192.168.1.0/25"
+    "us-east-2b" = "192.168.1.128/25"
+  }
+}
+
+variable "kubeconfig_output_path" {
+  type        = string
+  description = "Ouput file path, where the kubeconfig will be stored"
+  default     = "./"
 }
 
 variable "ssh_public_key" {
@@ -106,7 +115,7 @@ variable "volterra_namespace" {
 
 variable "app_domain" {
   type        = string
-  description = "App domain name, whose sub domain is delegated and managed by Volterra"
+  description = "FQDN for the app. If you have delegated domain `prod.example.com`, then your app_domain can be `<app_name>.prod.example.com`"
 }
 
 variable "enable_hsts" {
