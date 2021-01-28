@@ -20,7 +20,7 @@ resource "volterra_network_policy_view" "this" {
     any              = false
     inside_endpoints = false
     prefix_list {
-      prefixes = [var.aws_eks_cidr]
+      prefixes = values(var.aws_subnet_eks_cidr)
     }
   }
   ingress_rules {
@@ -129,13 +129,13 @@ resource "volterra_aws_vpc_site" "this" {
     az_nodes {
       aws_az_name = var.aws_az
       inside_subnet {
-        existing_subnet_id = aws_subnet.this["inside"].id
+        existing_subnet_id = aws_subnet.volterra_ce["inside"].id
       }
       workload_subnet {
-        existing_subnet_id = aws_subnet.this["workload"].id
+        existing_subnet_id = aws_subnet.volterra_ce["workload"].id
       }
       outside_subnet {
-        existing_subnet_id = aws_subnet.this["outside"].id
+        existing_subnet_id = aws_subnet.volterra_ce["outside"].id
       }
     }
     active_forward_proxy_policies {
@@ -151,8 +151,11 @@ resource "volterra_aws_vpc_site" "this" {
       }
     }
     inside_static_routes {
-      static_route_list {
-        simple_static_route = var.aws_eks_cidr
+      dynamic "static_route_list" {
+        for_each = var.aws_subnet_eks_cidr
+        content {
+          simple_static_route = static_route_list.value
+        }
       }
     }
     no_global_network        = true
@@ -174,9 +177,10 @@ resource "null_resource" "wait_for_aws_mns" {
 }
 
 resource "volterra_tf_params_action" "apply_aws_vpc" {
-  depends_on      = [null_resource.wait_for_aws_mns]
-  site_name       = var.skg_name
-  site_kind       = "aws_vpc_site"
-  action          = "apply"
-  wait_for_action = true
+  depends_on       = [null_resource.wait_for_aws_mns]
+  site_name        = var.skg_name
+  site_kind        = "aws_vpc_site"
+  action           = "apply"
+  wait_for_action  = true
+  ignore_on_update = true
 }
