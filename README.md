@@ -98,7 +98,7 @@ provider "volterra" {
 
 module "skg" {
   source             = "volterraedge/secure-k8s-gateway/volterra"
-  version            = "0.0.1"
+  version            = "0.0.2"
   skg_name           = "module-skg-test"
   volterra_namespace = "module-skg-test"
   app_domain         = "module-skg-test.adn.helloclouds.app"
