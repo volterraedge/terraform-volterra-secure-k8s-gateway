@@ -7,13 +7,33 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
 ---
 
-## Assumptions:
+## Prerequisites:
 
-* You already have signed up for Volterra account. If not, use this link to [signup](https://console.ves.volterra.io/signup/)
+### AWS Account
 
-* You already have an AWS account and have downloaded [Programmatic Access Credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys)
+* AWS Programmatic access credentials
 
----
+  You should already have a user create in AWS account and have already have [aws programmatic access credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys) for the user.
+
+* AWS IAM Policy for the user
+
+  Follow this [link](https://volterra.io/docs/reference/cloud-cred-ref/aws-vpc-cred-ref) to add permission for AWS IAM user. You may need to contact your IAM admin to do this.
+
+### Volterra Account
+
+* Signup For Volterra Account
+
+  If you don't have a Volterra account. Please follow this link to [signup](https://console.ves.volterra.io/signup/)
+
+* Download Volterra API credentials file
+
+  Follow [how to generate API Certificate](https://volterra.io/docs/how-to/user-mgmt/credentials) to create API credentials
+
+* Setup domain delegation
+
+  Follow steps from this [link](https://volterra.io/docs/how-to/app-networking/domain-delegation) to create domain delegation.
+
+### Command Line Tools
 
 * Install terraform
 
@@ -27,41 +47,24 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
   $ brew upgrade hashicorp/tap/terraform
   ```
 
-* Download Volterra API credentials file
-
-  Follow the steps under section `Generate API Certificate` from [how to manage credentials doc](https://volterra.io/docs/how-to/user-mgmt/credentials)
-
-
-* Export the API certificate password as environment variable
-
+* Export the API certificate password as environment variable, this is needed for volterra provider to work
   ```bash
   export VES_P12_PASSWORD=<your credential password>
   ```
-
-* Setup domain delegation
-
-  Follow steps from this [link](https://volterra.io/docs/how-to/app-networking/domain-delegation) to create domain delegation.
-
-* Follow this [link](https://volterra.io/docs/reference/cloud-cred-ref/aws-vpc-cred-ref) to add permission for AWS IAM user. You may need to contact your IAM admin to do this.
 
 ---
 
 ## Usage Example
 
 ```hcl
-terraform {
-  required_providers {
-    volterra = {
-      source = "volterraedge/volterra"
-      version = "0.0.5"
-    }
-  }
-}
-
 variable "api_url" {
-  default = "https://acmecorp.console.ves.volterra.io/api"
+  #-- UNCOMMENT FOR TEAM OR ORG TENANTS
+  # default = "https://<TENANT-NAME>.console.ves.volterra.io/api"
+  #--- UNCOMMENT FOR INDIVIDUAL/FREEMIUM
+  # default = "https://console.ves.volterra.io/api"
 }
 
+# This points the absolute path of the api credentials file you downloaded from Volterra
 variable "api_p12_file" {
   default = "acmecorp.console.api-creds.p12"
 }
@@ -71,6 +74,10 @@ provider "volterra" {
   url          = var.api_url
 }
 
+# Below is an option to pass access key and secret key as you probably don't want to save it in a file
+# Use env variable before you run `terraform apply` command
+# export TF_VAR_aws_secret_key=<your aws secret key>
+# export TF_VAR_aws_secret_key=<your aws access key>
 variable "aws_access_key" {}
 
 variable "aws_secret_key" {}
@@ -116,8 +123,8 @@ output "app_url" {
 | Name | Version |
 |------|---------|
 | terraform | >= 0.12.9, != 0.13.0 |
-| aws | ~> 3.3.0 |
-| kubernetes | ~> 1.9 |
+| aws | >= 3.22.0 |
+| kubernetes | >= 1.9 |
 | local | >= 2.0 |
 | null | >= 3.0 |
 | volterra | 0.0.5 |
@@ -126,7 +133,7 @@ output "app_url" {
 
 | Name | Version |
 |------|---------|
-| aws | ~> 3.3.0 |
+| aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
 | volterra | 0.0.5 |

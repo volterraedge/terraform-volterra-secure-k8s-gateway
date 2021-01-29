@@ -6,9 +6,9 @@ terraform {
       source  = "volterraedge/volterra"
       version = "0.0.5"
     }
-    aws        = "~> 3.3.0"
+    aws        = ">= 3.22.0"
     null       = ">= 3.0"
-    kubernetes = "~> 1.9"
+    kubernetes = ">= 1.9"
     local      = ">= 2.0"
   }
 }
