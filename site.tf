@@ -12,7 +12,7 @@ resource "volterra_cloud_credentials" "this" {
   }
 }
 
-resource "volterra_network_policy_view" "this" {
+resource "volterra_network_policy_view" "sli" {
   name        = format("%s-net-policy", var.skg_name)
   description = format("Network Policy defined for site %s", var.skg_name)
   namespace   = "system"
@@ -89,6 +89,31 @@ resource "volterra_network_policy_view" "this" {
   }
 }
 
+resource "volterra_network_policy_view" "slo" {
+  name        = format("%s-net-policy-slo", var.skg_name)
+  description = format("Network Policy (SLO) defined for site %s", var.skg_name)
+  namespace   = "system"
+  endpoint {
+    any              = true
+    inside_endpoints = false
+  }
+  ingress_rules {
+    rule_name = ""
+    metadata {
+      name = "allow-traffic-from-slo-to-sli"
+    }
+    prefix_list {
+      prefixes = [lookup(var.aws_subnet_ce_cidr, "outside", "")]
+    }
+    action          = "ALLOW"
+    any             = false
+    all_tcp_traffic = false
+    all_traffic     = true
+    all_udp_traffic = false
+    keys            = []
+  }
+}
+
 resource "volterra_forward_proxy_policy" "this" {
   name        = format("%s-proxy-policy", var.skg_name)
   description = format("Fwd Proxy Policy defined for site %s", var.skg_name)
@@ -146,7 +171,11 @@ resource "volterra_aws_vpc_site" "this" {
     }
     active_network_policies {
       network_policies {
-        name      = volterra_network_policy_view.this.name
+        name      = volterra_network_policy_view.sli.name
+        namespace = "system"
+      }
+      network_policies {
+        name      = volterra_network_policy_view.slo.name
         namespace = "system"
       }
     }
