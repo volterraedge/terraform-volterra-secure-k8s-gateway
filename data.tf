@@ -1,3 +1,4 @@
 data "local_file" "kubeconfig" {
-  filename = module.eks.kubeconfig_filename
+  depends_on = [module.eks]
+  filename   = module.eks.kubeconfig_filename
 }
