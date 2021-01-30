@@ -7,6 +7,12 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
 ---
 
+## Overview
+
+![Image of ADN Usecase](https://volterra.io/static/57304b920c496ad0c44fe148fde4d3ba/3353d/top-new.webp)
+
+---
+
 ## Prerequisites:
 
 ### AWS Account
@@ -58,7 +64,7 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
 ```hcl
 variable "api_url" {
-  #-- UNCOMMENT FOR TEAM OR ORG TENANTS
+  #--- UNCOMMENT FOR TEAM OR ORG TENANTS
   # default = "https://<TENANT-NAME>.console.ves.volterra.io/api"
   #--- UNCOMMENT FOR INDIVIDUAL/FREEMIUM
   # default = "https://console.ves.volterra.io/api"
@@ -66,7 +72,7 @@ variable "api_url" {
 
 # This points the absolute path of the api credentials file you downloaded from Volterra
 variable "api_p12_file" {
-  default = "acmecorp.console.api-creds.p12"
+  default = "path/to/your/api-creds.p12"
 }
 
 provider "volterra" {
