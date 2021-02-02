@@ -87,6 +87,16 @@ resource "aws_subnet" "eks" {
   }
 }
 
+resource "aws_security_group_rule" "eks-cluster-ingress-volterra-node" {
+  description       = "Allow eks cluster to communicate with volterra node"
+  from_port         = 0
+  protocol          = "-1"
+  security_group_id = module.eks.cluster_primary_security_group_id
+  cidr_blocks       = [lookup(var.aws_subnet_ce_cidr, "inside", "")]
+  to_port           = 0
+  type              = "ingress"
+}
+
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = var.skg_name

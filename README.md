@@ -75,15 +75,10 @@ variable "api_p12_file" {
   default = "path/to/your/api-creds.p12"
 }
 
-provider "volterra" {
-  api_p12_file = var.api_p12_file
-  url          = var.api_url
-}
-
 # Below is an option to pass access key and secret key as you probably don't want to save it in a file
 # Use env variable before you run `terraform apply` command
+# export TF_VAR_aws_access_key=<your aws access key>
 # export TF_VAR_aws_secret_key=<your aws secret key>
-# export TF_VAR_aws_secret_key=<your aws access key>
 variable "aws_access_key" {}
 
 variable "aws_secret_key" {}
@@ -104,7 +99,7 @@ provider "volterra" {
 
 module "skg" {
   source             = "volterraedge/secure-k8s-gateway/volterra"
-  version            = "0.0.2"
+  version            = "0.0.3"
   skg_name           = "module-skg-test"
   volterra_namespace = "module-skg-test"
   app_domain         = "module-skg-test.adn.helloclouds.app"
