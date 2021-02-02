@@ -21,7 +21,8 @@ resource "volterra_discovery" "eks" {
           url = format("string:///%s", local.kubeconfig_b64)
         }
       }
-      reachable = true
+      reachable = false
+      isolated  = true
     }
     publish_info {
       disable = true
