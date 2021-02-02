@@ -83,11 +83,31 @@ variable "aws_access_key" {}
 
 variable "aws_secret_key" {}
 
+variable "aws_region" {
+  default = "us-east-2"
+}
+
+variable "aws_az" {
+  default = "us-east-2a"
+}
+
+variable "app_fqdn" {}
+
+variable "namespace" {
+  default = ""
+}
+
+variable "name" {}
+
+locals{
+  namespace = var.namespace != "" ? var.namespace : var.name
+}
+
 terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.0.5"
+      version = "0.0.6"
     }
   }
 }
@@ -99,14 +119,14 @@ provider "volterra" {
 
 module "skg" {
   source             = "volterraedge/secure-k8s-gateway/volterra"
-  version            = "0.0.3"
-  skg_name           = "module-skg-test"
-  volterra_namespace = "module-skg-test"
-  app_domain         = "module-skg-test.adn.helloclouds.app"
+  version            = "0.0.4"
+  skg_name           = var.name
+  volterra_namespace = local.namespace
+  app_domain         = var.app_fqdn
   aws_secret_key     = var.aws_secret_key
   aws_access_key     = var.aws_access_key
-  aws_region         = "us-east-2"
-  aws_az             = "us-east-2a"
+  aws_region         = var.aws_region
+  aws_az             = var.aws_az
 }
 
 output "kubeconfig_filename" {
@@ -125,10 +145,9 @@ output "app_url" {
 |------|---------|
 | terraform | >= 0.12.9, != 0.13.0 |
 | aws | >= 3.22.0 |
-| kubernetes | >= 1.9 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.0.5 |
+| volterra | 0.0.6 |
 
 ## Providers
 
@@ -137,7 +156,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.0.5 |
+| volterra | 0.0.6 |
 
 ## Inputs
 

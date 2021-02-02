@@ -197,6 +197,11 @@ resource "volterra_aws_vpc_site" "this" {
   lifecycle {
     ignore_changes = [labels]
   }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "sleep 5s"
+  }
 }
 
 resource "null_resource" "wait_for_aws_mns" {
