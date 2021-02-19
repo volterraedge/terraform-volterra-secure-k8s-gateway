@@ -196,7 +196,8 @@ resource "volterra_aws_vpc_site" "this" {
     no_network_policy        = false
     no_forward_proxy         = false
   }
-  ssh_key = var.ssh_public_key
+  ssh_key                 = var.ssh_public_key
+  logs_streaming_disabled = true
   lifecycle {
     ignore_changes = [labels]
   }
