@@ -107,7 +107,7 @@ terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.0.6"
+      version = "0.1.0"
     }
   }
 }
@@ -119,7 +119,7 @@ provider "volterra" {
 
 module "skg" {
   source             = "volterraedge/secure-k8s-gateway/volterra"
-  version            = "0.0.5"
+  version            = "0.1.0"
   skg_name           = var.name
   volterra_namespace = local.namespace
   app_domain         = var.app_fqdn
@@ -147,7 +147,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.0.6 |
+| volterra | 0.1.0 |
 
 ## Providers
 
@@ -156,7 +156,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.0.6 |
+| volterra | 0.1.0 |
 
 ## Inputs
 
