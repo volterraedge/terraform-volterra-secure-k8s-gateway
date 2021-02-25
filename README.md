@@ -53,6 +53,14 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
   $ brew upgrade hashicorp/tap/terraform
   ```
 
+* Install Kubectl
+
+  Please follow this [doc](https://kubernetes.io/docs/tasks/tools/install-kubectl/) to install kubectl
+
+* Install aws-iam-authenticator
+
+  Please follow this [doc](https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html) to install aws-iam-authenticator
+
 * Export the API certificate password as environment variable, this is needed for volterra provider to work
   ```bash
   export VES_P12_PASSWORD=<your credential password>
@@ -99,6 +107,28 @@ variable "namespace" {
 
 variable "name" {}
 
+// This is the VPC CIDR for AWS
+variable "aws_vpc_cidr" {
+  default = "192.168.0.0/22"
+}
+
+// Map to hold different CE CIDR, if you are not using default aws_vpc_cidr then you need to change the below map as well
+variable "aws_subnet_ce_cidr" {
+  default = {
+    "outside"  = "192.168.0.0/25"
+    "inside"   = "192.168.0.192/26"
+    "workload" = "192.168.0.128/26"
+  }
+}
+
+// Map to hold different EKS cidr with key as desired AZ on which the subnet should exist
+variable "aws_subnet_eks_cidr" {
+  default = {
+    "us-east-2a" = "192.168.1.0/25"
+    "us-east-2b" = "192.168.1.128/25"
+  }
+}
+
 locals{
   namespace = var.namespace != "" ? var.namespace : var.name
 }
@@ -107,7 +137,7 @@ terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.1.0"
+      version = "0.1.1"
     }
   }
 }
@@ -118,15 +148,18 @@ provider "volterra" {
 }
 
 module "skg" {
-  source             = "volterraedge/secure-k8s-gateway/volterra"
-  version            = "0.1.0"
-  skg_name           = var.name
-  volterra_namespace = local.namespace
-  app_domain         = var.app_fqdn
-  aws_secret_key     = var.aws_secret_key
-  aws_access_key     = var.aws_access_key
-  aws_region         = var.aws_region
-  aws_az             = var.aws_az
+  source              = "volterraedge/secure-k8s-gateway/volterra"
+  version             = "0.1.0"
+  skg_name            = var.name
+  volterra_namespace  = local.namespace
+  app_domain          = var.app_fqdn
+  aws_secret_key      = var.aws_secret_key
+  aws_access_key      = var.aws_access_key
+  aws_region          = var.aws_region
+  aws_az              = var.aws_az
+  aws_vpc_cidr        = var.aws_vpc_cidr
+  aws_subnet_ce_cidr  = var.aws_subnet_ce_cidr
+  aws_subnet_eks_cidr = var.aws_subnet_eks_cidr
 }
 
 output "kubeconfig_filename" {
@@ -139,6 +172,7 @@ output "app_url" {
 ```
 
 ---
+
 ## Requirements
 
 | Name | Version |
@@ -147,7 +181,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.1.0 |
+| volterra | 0.1.1 |
 
 ## Providers
 
@@ -156,7 +190,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.1.0 |
+| volterra | 0.1.1 |
 
 ## Inputs
 
@@ -170,9 +204,9 @@ output "app_url" {
 | aws\_instance\_type | AWS instance type used for the Volterra site | `string` | `"t3.2xlarge"` | no |
 | aws\_region | AWS Region where Site will be created | `string` | n/a | yes |
 | aws\_secret\_key | AWS Secret Access Key. Programmable API secret access key needed for creating the site | `string` | n/a | yes |
-| aws\_subnet\_ce\_cidr | Map to hold different CE cidr with key as name of subnet | `map(string)` | <pre>{<br>  "inside": "192.168.0.192/26",<br>  "outside": "192.168.0.0/25",<br>  "workload": "192.168.0.128/26"<br>}</pre> | no |
-| aws\_subnet\_eks\_cidr | Map to hold different EKS cidr with key as desired AZ on which the subnet should exist | `map(string)` | <pre>{<br>  "us-east-2a": "192.168.1.0/25",<br>  "us-east-2b": "192.168.1.128/25"<br>}</pre> | no |
-| aws\_vpc\_cidr | AWS VPC CIDR, that will be used to create the vpc while creating the site | `string` | `"192.168.0.0/22"` | no |
+| aws\_subnet\_ce\_cidr | Map to hold different CE cidr with key as name of subnet | `map(string)` | n/a | yes |
+| aws\_subnet\_eks\_cidr | Map to hold different EKS cidr with key as desired AZ on which the subnet should exist | `map(string)` | n/a | yes |
+| aws\_vpc\_cidr | AWS VPC CIDR, that will be used to create the vpc while creating the site | `string` | n/a | yes |
 | certified\_hardware | Volterra certified hardware used to create Volterra site on AWS | `string` | `"aws-byol-multi-nic-voltmesh"` | no |
 | deny\_dns\_list | List of IP prefixes to be denied | `list(string)` | <pre>[<br>  "8.8.4.4/32"<br>]</pre> | no |
 | eks\_port\_range | EKS port range to be allowed | `list(string)` | <pre>[<br>  "30000-32767"<br>]</pre> | no |
