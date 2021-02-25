@@ -26,7 +26,6 @@ variable "aws_az" {
 variable "aws_vpc_cidr" {
   type        = string
   description = "AWS VPC CIDR, that will be used to create the vpc while creating the site"
-  default     = "192.168.0.0/22"
 }
 
 variable "site_disk_size" {
@@ -44,20 +43,11 @@ variable "aws_instance_type" {
 variable "aws_subnet_ce_cidr" {
   type        = map(string)
   description = "Map to hold different CE cidr with key as name of subnet"
-  default = {
-    "outside"  = "192.168.0.0/25"
-    "inside"   = "192.168.0.192/26"
-    "workload" = "192.168.0.128/26"
-  }
 }
 
 variable "aws_subnet_eks_cidr" {
   type        = map(string)
   description = "Map to hold different EKS cidr with key as desired AZ on which the subnet should exist"
-  default = {
-    "us-east-2a" = "192.168.1.0/25"
-    "us-east-2b" = "192.168.1.128/25"
-  }
 }
 
 variable "kubeconfig_output_path" {
