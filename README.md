@@ -107,12 +107,12 @@ variable "namespace" {
 
 variable "name" {}
 
-// This is the VPC CIDR for AWS
+# This is the VPC CIDR for AWS
 variable "aws_vpc_cidr" {
   default = "192.168.0.0/22"
 }
 
-// Map to hold different CE CIDR, if you are not using default aws_vpc_cidr then you need to change the below map as well
+# Map to hold different CE CIDR, if you are not using default aws_vpc_cidr then you need to change the below map as well
 variable "aws_subnet_ce_cidr" {
   default = {
     "outside"  = "192.168.0.0/25"
@@ -121,7 +121,7 @@ variable "aws_subnet_ce_cidr" {
   }
 }
 
-// Map to hold different EKS cidr with key as desired AZ on which the subnet should exist
+# Map to hold different EKS cidr with key as desired AZ on which the subnet should exist
 variable "aws_subnet_eks_cidr" {
   default = {
     "us-east-2a" = "192.168.1.0/25"
