@@ -1,14 +1,15 @@
 data "volterra_namespace" "this" {
-  count = var.volterra_namespace_exists ? 1 : 0
+  count = var.volterra_namespace_exists && !var.eks_only ? 1 : 0
   name  = var.volterra_namespace
 }
 
 resource "volterra_namespace" "this" {
-  count = var.volterra_namespace_exists ? 0 : 1
+  count = var.volterra_namespace_exists || var.eks_only ? 0 : 1
   name  = var.volterra_namespace
 }
 
 resource "volterra_origin_pool" "this" {
+  for_each               = toset(var.eks_only ? [] : [var.skg_name])
   name                   = format("%s-server", var.skg_name)
   namespace              = local.namespace
   description            = format("Origin pool pointing to frontend k8s service running on RE's")
@@ -21,7 +22,7 @@ resource "volterra_origin_pool" "this" {
       service_name    = "frontend.default"
       site_locator {
         site {
-          name      = volterra_aws_vpc_site.this.name
+          name      = volterra_aws_vpc_site.this[each.key].name
           namespace = "system"
         }
       }
@@ -33,6 +34,7 @@ resource "volterra_origin_pool" "this" {
 }
 
 resource "volterra_waf" "this" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = format("%s-waf", var.skg_name)
   description = format("WAF in block mode for %s", var.skg_name)
   namespace   = local.namespace
@@ -50,6 +52,7 @@ resource "volterra_waf" "this" {
 }
 
 resource "volterra_http_loadbalancer" "this" {
+  for_each                        = toset(var.eks_only ? [] : [var.skg_name])
   name                            = format("%s-lb", var.skg_name)
   namespace                       = local.namespace
   description                     = format("HTTPS loadbalancer object for %s origin server", var.skg_name)
@@ -57,7 +60,7 @@ resource "volterra_http_loadbalancer" "this" {
   advertise_on_public_default_vip = true
   default_route_pools {
     pool {
-      name      = volterra_origin_pool.this.name
+      name      = volterra_origin_pool.this[each.key].name
       namespace = local.namespace
     }
   }
@@ -67,7 +70,7 @@ resource "volterra_http_loadbalancer" "this" {
     no_mtls       = true
   }
   waf {
-    name      = volterra_waf.this.name
+    name      = volterra_waf.this[each.key].name
     namespace = local.namespace
   }
   disable_waf                     = false

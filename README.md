@@ -70,6 +70,8 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
 ## Usage Example
 
+### Completely automated scenario, where all volterra object and eks objects are created by the module
+
 ```hcl
 variable "api_url" {
   #--- UNCOMMENT FOR TEAM OR ORG TENANTS
@@ -99,13 +101,13 @@ variable "aws_az" {
   default = "us-east-2a"
 }
 
-variable "app_fqdn" {}
-
 variable "namespace" {
   default = ""
 }
 
 variable "name" {}
+
+variable "app_fqdn" {}
 
 # This is the VPC CIDR for AWS
 variable "aws_vpc_cidr" {
@@ -149,7 +151,7 @@ provider "volterra" {
 
 module "skg" {
   source              = "volterraedge/secure-k8s-gateway/volterra"
-  version             = "0.1.2"
+  version             = "0.1.3"
   skg_name            = var.name
   volterra_namespace  = local.namespace
   app_domain          = var.app_fqdn
@@ -171,17 +173,121 @@ output "app_url" {
 }
 ```
 
+### EKS related objects are only created by this module
+
+```hcl
+variable "api_url" {
+  #--- UNCOMMENT FOR TEAM OR ORG TENANTS
+  # default = "https://<TENANT-NAME>.console.ves.volterra.io/api"
+  #--- UNCOMMENT FOR INDIVIDUAL/FREEMIUM
+  # default = "https://console.ves.volterra.io/api"
+}
+
+# This points the absolute path of the api credentials file you downloaded from Volterra
+variable "api_p12_file" {
+  default = "path/to/your/api-creds.p12"
+}
+
+# Below is an option to pass access key and secret key as you probably don't want to save it in a file
+# Use env variable before you run `terraform apply` command
+# export TF_VAR_aws_access_key=<your aws access key>
+# export TF_VAR_aws_secret_key=<your aws secret key>
+variable "aws_access_key" {}
+
+variable "aws_secret_key" {}
+
+variable "aws_region" {
+  default = "us-east-2"
+}
+
+variable "aws_az" {
+  default = "us-east-2a"
+}
+
+variable "namespace" {
+  default = ""
+}
+
+variable "name" {}
+
+variable "aws_vpc_cidr" {
+  default = ""
+}
+
+variable "aws_subnet_ce_cidr" {
+  default = {}
+}
+
+# Map to hold different EKS cidr with key as desired AZ on which the subnet should exist
+variable "aws_subnet_eks_cidr" {
+  default = {
+    "us-east-2a" = "192.168.1.0/25"
+    "us-east-2b" = "192.168.1.128/25"
+  }
+}
+
+# Existing volterra site name
+variable "volterra_site_name" {}
+
+# Existing AWS VPC Id
+variable "vpc_id" {}
+
+locals{
+  namespace = var.namespace != "" ? var.namespace : var.name
+}
+
+terraform {
+  required_providers {
+    volterra = {
+      source = "volterraedge/volterra"
+      version = "0.1.0"
+    }
+  }
+}
+
+provider "volterra" {
+  api_p12_file = var.api_p12_file
+  url          = var.api_url
+}
+
+module "skg" {
+  source              = "volterraedge/secure-k8s-gateway/volterra"
+  version             = "0.1.3"
+  skg_name            = var.name
+  volterra_namespace  = local.namespace
+  app_domain          = ""
+  aws_secret_key      = var.aws_secret_key
+  aws_access_key      = var.aws_access_key
+  aws_region          = var.aws_region
+  aws_az              = var.aws_az
+  aws_vpc_cidr        = var.aws_vpc_cidr
+  aws_subnet_ce_cidr  = var.aws_subnet_ce_cidr
+  aws_subnet_eks_cidr = var.aws_subnet_eks_cidr
+  eks_only            = true
+  volterra_site_name  = var.volterra_site_name
+  vpc_id              = var.vpc_id
+
+}
+
+output "kubeconfig_filename" {
+  value = module.skg.kubeconfig_filename
+}
+
+output "app_url" {
+  value = module.skg.app_url
+}
+```
 ---
 
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.12.9, != 0.13.0 |
+| terraform | >= 0.13.1 |
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.1.0 |
+| volterra | 0.1.1 |
 
 ## Providers
 
@@ -190,7 +296,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.1.0 |
+| volterra | 0.1.1 |
 
 ## Inputs
 
@@ -209,6 +315,7 @@ output "app_url" {
 | aws\_vpc\_cidr | AWS VPC CIDR, that will be used to create the vpc while creating the site | `string` | n/a | yes |
 | certified\_hardware | Volterra certified hardware used to create Volterra site on AWS | `string` | `"aws-byol-multi-nic-voltmesh"` | no |
 | deny\_dns\_list | List of IP prefixes to be denied | `list(string)` | <pre>[<br>  "8.8.4.4/32"<br>]</pre> | no |
+| eks\_only | Flag to enable creation of eks cluster only, other volterra objects will be created through Volterra console | `bool` | `false` | no |
 | eks\_port\_range | EKS port range to be allowed | `list(string)` | <pre>[<br>  "30000-32767"<br>]</pre> | no |
 | enable\_hsts | Flag to enable hsts for HTTPS loadbalancer | `bool` | `false` | no |
 | enable\_redirect | Flag to enable http redirect to HTTPS loadbalancer | `bool` | `true` | no |
@@ -220,6 +327,8 @@ output "app_url" {
 | ssh\_public\_key | SSH Public Key | `string` | `""` | no |
 | volterra\_namespace | Volterra app namespace where the object will be created. This cannot be system or shared ns. | `string` | n/a | yes |
 | volterra\_namespace\_exists | Flag to create or use existing volterra namespace | `string` | `false` | no |
+| volterra\_site\_name | Name of the existing aws vpc site, this is used only when var eks\_only set to true | `string` | `""` | no |
+| vpc\_id | Name of the existing vpc id, this is used only when var eks\_only set to true | `string` | `""` | no |
 
 ## Outputs
 

@@ -131,3 +131,21 @@ variable "js_cookie_expiry" {
   description = "Javascript cookie expiry time in seconds"
   default     = 3600
 }
+
+variable "eks_only" {
+  type        = bool
+  description = "Flag to enable creation of eks cluster only, other volterra objects will be created through Volterra console"
+  default     = false
+}
+
+variable "volterra_site_name" {
+  type        = string
+  description = "Name of the existing aws vpc site, this is used only when var eks_only set to true"
+  default     = ""
+}
+
+variable "vpc_id" {
+  type        = string
+  description = "Name of the existing vpc id, this is used only when var eks_only set to true"
+  default     = ""
+}

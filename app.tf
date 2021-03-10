@@ -1,4 +1,5 @@
 resource "volterra_discovery" "eks" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = var.skg_name
   description = "Discovery object to discover all services in eks cluster"
   namespace   = "system"
@@ -7,7 +8,7 @@ resource "volterra_discovery" "eks" {
   where {
     site {
       ref {
-        name      = volterra_aws_vpc_site.this.name
+        name      = volterra_cloud_credentials.this[each.key].name
         namespace = "system"
       }
       network_type = "VIRTUAL_NETWORK_SITE_LOCAL_INSIDE"

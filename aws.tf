@@ -10,6 +10,10 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
+data "aws_vpc" "this" {
+  id = local.vpc_id
+}
+
 data "aws_eks_cluster" "cluster" {
   name = module.eks.cluster_id
 }
@@ -19,6 +23,7 @@ data "aws_eks_cluster_auth" "cluster" {
 }
 
 resource "aws_vpc" "this" {
+  for_each                         = toset(var.eks_only ? [] : [var.skg_name])
   cidr_block                       = var.aws_vpc_cidr
   assign_generated_ipv6_cidr_block = false
   enable_dns_support               = true
@@ -31,7 +36,8 @@ resource "aws_vpc" "this" {
 }
 
 resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
+  for_each = toset(var.eks_only ? [] : [var.skg_name])
+  vpc_id   = local.vpc_id
   tags = {
     "Name"    = var.skg_name
     "usecase" = "secure-k8s-gateway"
@@ -39,9 +45,10 @@ resource "aws_internet_gateway" "this" {
 }
 
 resource "aws_route" "ipv6_default" {
-  route_table_id              = aws_vpc.this.main_route_table_id
+  for_each                    = toset(var.eks_only ? [] : [var.skg_name])
+  route_table_id              = data.aws_vpc.this.main_route_table_id
   destination_ipv6_cidr_block = "::/0"
-  gateway_id                  = aws_internet_gateway.this.id
+  gateway_id                  = aws_internet_gateway.this[var.skg_name].id
   lifecycle {
     ignore_changes = [
       route_table_id
@@ -50,9 +57,10 @@ resource "aws_route" "ipv6_default" {
 }
 
 resource "aws_route" "ipv4_default" {
-  route_table_id         = aws_vpc.this.main_route_table_id
+  for_each               = toset(var.eks_only ? [] : [var.skg_name])
+  route_table_id         = data.aws_vpc.this.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.this.id
+  gateway_id             = aws_internet_gateway.this[var.skg_name].id
   lifecycle {
     ignore_changes = [
       route_table_id
@@ -62,8 +70,8 @@ resource "aws_route" "ipv4_default" {
 
 
 resource "aws_subnet" "volterra_ce" {
-  for_each          = var.aws_subnet_ce_cidr
-  vpc_id            = aws_vpc.this.id
+  for_each          = var.eks_only ? {} : var.aws_subnet_ce_cidr
+  vpc_id            = local.vpc_id
   cidr_block        = each.value
   availability_zone = var.aws_az
   tags = {
@@ -77,7 +85,7 @@ resource "aws_subnet" "volterra_ce" {
 resource "aws_subnet" "eks" {
   depends_on        = [volterra_tf_params_action.apply_aws_vpc]
   for_each          = var.aws_subnet_eks_cidr
-  vpc_id            = aws_vpc.this.id
+  vpc_id            = local.vpc_id
   cidr_block        = each.value
   availability_zone = each.key
   tags = {
@@ -87,12 +95,32 @@ resource "aws_subnet" "eks" {
   }
 }
 
+data "aws_security_group" "this" {
+  for_each = toset(var.eks_only ? [var.skg_name] : [])
+  filter {
+    name   = "tag:ves.io/site_name"
+    values = [var.volterra_site_name]
+  }
+  vpc_id = var.vpc_id
+}
+
+resource "aws_security_group_rule" "volterra-node-eks-cluster-ingress" {
+  for_each                 = toset(var.eks_only ? [var.skg_name] : [])
+  description              = "Allow volterra node to communicate with eks cluster"
+  from_port                = 0
+  protocol                 = "-1"
+  security_group_id        = module.eks.cluster_primary_security_group_id
+  source_security_group_id = data.aws_security_group.this[each.key].id
+  to_port                  = 0
+  type                     = "ingress"
+}
+
 resource "aws_security_group_rule" "eks-cluster-ingress-volterra-node" {
   description       = "Allow eks cluster to communicate with volterra node"
   from_port         = 0
   protocol          = "-1"
   security_group_id = module.eks.cluster_primary_security_group_id
-  cidr_blocks       = [lookup(var.aws_subnet_ce_cidr, "inside", "")]
+  cidr_blocks       = local.inside_subnet_cidr
   to_port           = 0
   type              = "ingress"
 }
@@ -108,7 +136,7 @@ module "eks" {
     usecase     = "secure-k8s-gateway"
   }
 
-  vpc_id = aws_vpc.this.id
+  vpc_id = local.vpc_id
 
   node_groups_defaults = {
     ami_type  = "AL2_x86_64"
