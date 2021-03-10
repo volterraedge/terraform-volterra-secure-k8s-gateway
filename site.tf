@@ -1,4 +1,5 @@
 resource "volterra_cloud_credentials" "this" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = format("%s-aws-cred", var.skg_name)
   description = format("AWS credential will be used to create site %s", var.skg_name)
   namespace   = "system"
@@ -13,6 +14,7 @@ resource "volterra_cloud_credentials" "this" {
 }
 
 resource "volterra_network_policy_view" "sli" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = format("%s-net-policy", var.skg_name)
   description = format("Network Policy defined for site %s", var.skg_name)
   namespace   = "system"
@@ -90,6 +92,7 @@ resource "volterra_network_policy_view" "sli" {
 }
 
 resource "volterra_network_policy_view" "slo" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = format("%s-net-policy-slo", var.skg_name)
   description = format("Network Policy (SLO) defined for site %s", var.skg_name)
   namespace   = "system"
@@ -115,6 +118,7 @@ resource "volterra_network_policy_view" "slo" {
 }
 
 resource "volterra_forward_proxy_policy" "this" {
+  for_each    = toset(var.eks_only ? [] : [var.skg_name])
   name        = format("%s-proxy-policy", var.skg_name)
   description = format("Fwd Proxy Policy defined for site %s", var.skg_name)
   namespace   = "system"
@@ -139,15 +143,16 @@ resource "volterra_forward_proxy_policy" "this" {
 }
 
 resource "volterra_aws_vpc_site" "this" {
+  for_each   = toset(var.eks_only ? [] : [var.skg_name])
   name       = var.skg_name
   namespace  = "system"
   aws_region = var.aws_region
   aws_cred {
-    name      = volterra_cloud_credentials.this.name
+    name      = volterra_cloud_credentials.this[each.key].name
     namespace = "system"
   }
   vpc {
-    vpc_id = aws_vpc.this.id
+    vpc_id = aws_vpc.this[each.key].id
   }
   disk_size     = var.site_disk_size
   instance_type = var.aws_instance_type
@@ -168,17 +173,17 @@ resource "volterra_aws_vpc_site" "this" {
     }
     active_forward_proxy_policies {
       forward_proxy_policies {
-        name      = volterra_forward_proxy_policy.this.name
+        name      = volterra_forward_proxy_policy.this[each.key].name
         namespace = "system"
       }
     }
     active_network_policies {
       network_policies {
-        name      = volterra_network_policy_view.sli.name
+        name      = volterra_network_policy_view.sli[each.key].name
         namespace = "system"
       }
       network_policies {
-        name      = volterra_network_policy_view.slo.name
+        name      = volterra_network_policy_view.slo[each.key].name
         namespace = "system"
       }
     }
@@ -209,14 +214,16 @@ resource "volterra_aws_vpc_site" "this" {
 }
 
 resource "null_resource" "wait_for_aws_mns" {
+  for_each = toset(var.eks_only ? [] : [var.skg_name])
   triggers = {
-    depends = volterra_aws_vpc_site.this.id
+    depends = volterra_aws_vpc_site.this[each.key].id
   }
 }
 
 resource "volterra_tf_params_action" "apply_aws_vpc" {
   depends_on       = [null_resource.wait_for_aws_mns]
-  site_name        = var.skg_name
+  for_each         = toset(var.eks_only ? [] : [var.skg_name])
+  site_name        = volterra_aws_vpc_site.this[each.key].name
   site_kind        = "aws_vpc_site"
   action           = "apply"
   wait_for_action  = true
