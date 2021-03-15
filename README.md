@@ -151,7 +151,6 @@ provider "volterra" {
 
 module "skg" {
   source              = "volterraedge/secure-k8s-gateway/volterra"
-  version             = "0.1.4"
   skg_name            = var.name
   volterra_namespace  = local.namespace
   app_domain          = var.app_fqdn
@@ -252,7 +251,6 @@ provider "volterra" {
 
 module "skg" {
   source              = "volterraedge/secure-k8s-gateway/volterra"
-  version             = "0.1.4"
   skg_name            = var.name
   volterra_namespace  = local.namespace
   app_domain          = ""
