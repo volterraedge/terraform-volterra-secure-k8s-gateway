@@ -1,6 +1,6 @@
 data "volterra_namespace" "this" {
-  count = var.volterra_namespace_exists && !var.eks_only ? 1 : 0
-  name  = var.volterra_namespace
+  count = !var.eks_only ? 1 : 0
+  name  = local.namespace
 }
 
 resource "volterra_namespace" "this" {
@@ -11,7 +11,7 @@ resource "volterra_namespace" "this" {
 resource "volterra_origin_pool" "this" {
   for_each               = toset(var.eks_only ? [] : [var.skg_name])
   name                   = format("%s-server", var.skg_name)
-  namespace              = local.namespace
+  namespace              = join("", data.volterra_namespace.this.*.name)
   description            = format("Origin pool pointing to frontend k8s service running on RE's")
   loadbalancer_algorithm = "ROUND ROBIN"
   origin_servers {
@@ -34,10 +34,13 @@ resource "volterra_origin_pool" "this" {
 }
 
 resource "volterra_waf" "this" {
-  for_each    = toset(var.eks_only ? [] : [var.skg_name])
+  for_each = toset(var.eks_only ? [] : [var.skg_name])
+  depends_on = [
+
+  ]
   name        = format("%s-waf", var.skg_name)
   description = format("WAF in block mode for %s", var.skg_name)
-  namespace   = local.namespace
+  namespace   = join("", data.volterra_namespace.this.*.name)
   app_profile {
     cms       = []
     language  = []
@@ -54,14 +57,14 @@ resource "volterra_waf" "this" {
 resource "volterra_http_loadbalancer" "this" {
   for_each                        = toset(var.eks_only ? [] : [var.skg_name])
   name                            = format("%s-lb", var.skg_name)
-  namespace                       = local.namespace
+  namespace                       = join("", data.volterra_namespace.this.*.name)
   description                     = format("HTTPS loadbalancer object for %s origin server", var.skg_name)
   domains                         = [var.app_domain]
   advertise_on_public_default_vip = true
   default_route_pools {
     pool {
       name      = volterra_origin_pool.this[each.key].name
-      namespace = local.namespace
+      namespace = join("", data.volterra_namespace.this.*.name)
     }
   }
   https_auto_cert {
@@ -71,7 +74,7 @@ resource "volterra_http_loadbalancer" "this" {
   }
   waf {
     name      = volterra_waf.this[each.key].name
-    namespace = local.namespace
+    namespace = join("", data.volterra_namespace.this.*.name)
   }
   disable_waf                     = false
   disable_rate_limit              = true
