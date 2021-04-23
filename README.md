@@ -139,7 +139,7 @@ terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.3.0"
+      version = "0.4.0"
     }
   }
 }
@@ -285,7 +285,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.3.0 |
+| volterra | 0.4.0 |
 
 ## Providers
 
@@ -294,7 +294,7 @@ output "app_url" {
 | aws | >= 3.22.0 |
 | local | >= 2.0 |
 | null | >= 3.0 |
-| volterra | 0.3.0 |
+| volterra | 0.4.0 |
 
 ## Inputs
 
