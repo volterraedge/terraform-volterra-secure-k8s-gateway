@@ -149,3 +149,9 @@ variable "vpc_id" {
   description = "Name of the existing vpc id, this is used only when var eks_only set to true"
   default     = ""
 }
+
+variable "disable_js_challenge" {
+  type        = bool
+  description = "disable javascript challenge"
+  default     = false
+}
