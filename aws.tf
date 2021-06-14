@@ -143,7 +143,6 @@ module "eks" {
     disk_size = 50
   }
 
-  config_output_path = var.kubeconfig_output_path
   write_kubeconfig   = true
   create_eks         = true
 

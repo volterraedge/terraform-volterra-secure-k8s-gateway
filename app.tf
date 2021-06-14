@@ -48,7 +48,7 @@ resource "null_resource" "apply_manifest" {
     manifest_sha1 = sha1(local.hipster_manifest_content)
   }
   provisioner "local-exec" {
-    command = "kubectl apply -f _output/hipster-adn.yaml"
+    command = "kubectl create namespace gitlab-managed-apps && kubectl apply -f _output/hipster-adn.yaml"
     environment = {
       KUBECONFIG = format("%s/_output/kubeconfig", path.root)
     }
