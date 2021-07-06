@@ -7,4 +7,10 @@ locals {
   })
   vpc_id             = var.eks_only ? var.vpc_id : aws_vpc.this[var.skg_name].id
   inside_subnet_cidr = var.aws_subnet_ce_cidr == {} ? ["127.0.0.1/32"] : [lookup(var.aws_subnet_ce_cidr, "inside", "127.0.0.1/32")]
+  js_delay_list = var.disable_js_challenge ? [] : [
+    {
+      js_script_delay = var.js_script_delay
+      cookie_expiry   = var.js_cookie_expiry
+    }
+  ]
 }
