@@ -19,7 +19,7 @@ resource "volterra_origin_pool" "this" {
       inside_network  = true
       outside_network = false
       vk8s_networks   = false
-      service_name    = "frontend.default"
+      service_name    = "frontend.${local.namespace}"
       site_locator {
         site {
           name      = volterra_aws_vpc_site.this[each.key].name
