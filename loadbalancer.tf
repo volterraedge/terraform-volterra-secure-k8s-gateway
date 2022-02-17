@@ -34,10 +34,10 @@ resource "volterra_origin_pool" "this" {
 }
 
 resource "volterra_app_firewall" "this" {
-  for_each    = toset(var.eks_only ? [] : [var.skg_name])
-  name        = format("%s-waf", var.skg_name)
-  description = format("WAF in block mode for %s", var.skg_name)
-  namespace   = local.namespace
+  for_each                 = toset(var.eks_only ? [] : [var.skg_name])
+  name                     = format("%s-waf", var.skg_name)
+  description              = format("WAF in block mode for %s", var.skg_name)
+  namespace                = local.namespace
   allow_all_response_codes = true
 }
 

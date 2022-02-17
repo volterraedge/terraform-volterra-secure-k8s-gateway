@@ -145,8 +145,8 @@ module "eks" {
   }
 
   kubeconfig_output_path = var.kubeconfig_output_path
-  write_kubeconfig   = true
-  create_eks         = true
+  write_kubeconfig       = true
+  create_eks             = true
 
   kubeconfig_aws_authenticator_env_variables = {
     "AWS_ACCESS_KEY_ID"     = var.aws_access_key
