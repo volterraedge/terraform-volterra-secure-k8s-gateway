@@ -150,6 +150,7 @@ module "eks" {
   create_eks             = true
 
   kubeconfig_aws_authenticator_env_variables = {
+    "AWS_PROFILE"           = "${var.skg_name}-profile"
     "AWS_ACCESS_KEY_ID"     = var.aws_access_key
     "AWS_SECRET_ACCESS_KEY" = var.aws_secret_key
   }
