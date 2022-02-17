@@ -48,14 +48,14 @@ resource "null_resource" "apply_manifest" {
     manifest_sha1 = sha1(local.hipster_manifest_content)
   }
   provisioner "local-exec" {
-    command = "kubectl apply -f _output/hipster-adn.yaml"
+    command = "kubectl apply -f _output/hipster-adn.yaml -n ${var.volterra_namespace}"
     environment = {
       KUBECONFIG = format("%s/_output/kubeconfig", path.root)
     }
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete -f _output/hipster-adn.yaml --ignore-not-found=true"
+    command = "kubectl delete -f _output/hipster-adn.yaml -n ${var.volterra_namespace} --ignore-not-found=true"
     environment = {
       KUBECONFIG = format("%s/_output/kubeconfig", path.root)
     }
