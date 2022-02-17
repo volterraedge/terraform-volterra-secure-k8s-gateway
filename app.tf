@@ -8,7 +8,7 @@ resource "volterra_discovery" "eks" {
   where {
     site {
       ref {
-        name      = volterra_cloud_credentials.this[each.key].name
+        name      = var.skg_name
         namespace = "system"
       }
       network_type = "VIRTUAL_NETWORK_SITE_LOCAL_INSIDE"
