@@ -42,8 +42,21 @@ resource "local_file" "hipster_manifest" {
   filename = format("%s/_output/hipster-adn.yaml", path.root)
 }
 
-resource "null_resource" "apply_manifest" {
+resource "null_resource" "create_namespace" {
   depends_on = [local_file.this_kubeconfig, local_file.hipster_manifest]
+  triggers = {
+    manifest_sha1 = sha1(local.hipster_manifest_content)
+  }
+  provisioner "local-exec" {
+    command = "kubectl create namespace ${local.namespace}"
+    environment = {
+      KUBECONFIG = format("%s/_output/kubeconfig", path.root)
+    }
+  }
+}
+
+resource "null_resource" "apply_manifest" {
+  depends_on = [local_file.this_kubeconfig, local_file.hipster_manifest, null_resource.create_namespace]
   triggers = {
     manifest_sha1 = sha1(local.hipster_manifest_content)
   }
