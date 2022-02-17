@@ -127,6 +127,7 @@ resource "aws_security_group_rule" "eks-cluster-ingress-volterra-node" {
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
+  # see for more info https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/17.24.0
   version         = "17.24.0"
   cluster_name    = var.skg_name
   cluster_version = "1.18"
