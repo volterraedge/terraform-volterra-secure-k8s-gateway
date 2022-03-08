@@ -19,7 +19,7 @@ resource "volterra_origin_pool" "this" {
       inside_network  = true
       outside_network = false
       vk8s_networks   = false
-      service_name    = "frontend.default"
+      service_name    = "frontend.${local.namespace}"
       site_locator {
         site {
           name      = volterra_aws_vpc_site.this[each.key].name
@@ -33,22 +33,12 @@ resource "volterra_origin_pool" "this" {
   endpoint_selection = "LOCAL_PREFERRED"
 }
 
-resource "volterra_waf" "this" {
-  for_each    = toset(var.eks_only ? [] : [var.skg_name])
-  name        = format("%s-waf", var.skg_name)
-  description = format("WAF in block mode for %s", var.skg_name)
-  namespace   = local.namespace
-  app_profile {
-    cms       = []
-    language  = []
-    webserver = []
-  }
-  mode = "BLOCK"
-  lifecycle {
-    ignore_changes = [
-      app_profile
-    ]
-  }
+resource "volterra_app_firewall" "this" {
+  for_each                 = toset(var.eks_only ? [] : [var.skg_name])
+  name                     = format("%s-waf", var.skg_name)
+  description              = format("WAF in block mode for %s", var.skg_name)
+  namespace                = local.namespace
+  allow_all_response_codes = true
 }
 
 resource "volterra_http_loadbalancer" "this" {
@@ -69,8 +59,8 @@ resource "volterra_http_loadbalancer" "this" {
     http_redirect = var.enable_redirect
     no_mtls       = true
   }
-  waf {
-    name      = volterra_waf.this[each.key].name
+  app_firewall {
+    name      = volterra_app_firewall.this[each.key].name
     namespace = local.namespace
   }
   disable_waf                     = false

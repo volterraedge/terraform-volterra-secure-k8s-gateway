@@ -126,7 +126,9 @@ resource "aws_security_group_rule" "eks-cluster-ingress-volterra-node" {
 }
 
 module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
+  source = "terraform-aws-modules/eks/aws"
+  # see for more info https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/17.24.0
+  version         = "17.24.0"
   cluster_name    = var.skg_name
   cluster_version = "1.18"
   subnets         = local.eks_subnets
@@ -143,10 +145,11 @@ module "eks" {
     disk_size = 50
   }
 
-  config_output_path = var.kubeconfig_output_path
-  write_kubeconfig   = true
-  create_eks         = true
+  kubeconfig_output_path = var.kubeconfig_output_path
+  write_kubeconfig       = true
+  create_eks             = true
 
+  manage_aws_auth = false
   kubeconfig_aws_authenticator_env_variables = {
     "AWS_ACCESS_KEY_ID"     = var.aws_access_key
     "AWS_SECRET_ACCESS_KEY" = var.aws_secret_key

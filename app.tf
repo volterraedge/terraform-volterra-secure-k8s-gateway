@@ -8,7 +8,7 @@ resource "volterra_discovery" "eks" {
   where {
     site {
       ref {
-        name      = volterra_cloud_credentials.this[each.key].name
+        name      = var.skg_name
         namespace = "system"
       }
       network_type = "VIRTUAL_NETWORK_SITE_LOCAL_INSIDE"
@@ -42,23 +42,36 @@ resource "local_file" "hipster_manifest" {
   filename = format("%s/_output/hipster-adn.yaml", path.root)
 }
 
-resource "null_resource" "apply_manifest" {
+resource "null_resource" "create_namespace" {
   depends_on = [local_file.this_kubeconfig, local_file.hipster_manifest]
   triggers = {
     manifest_sha1 = sha1(local.hipster_manifest_content)
   }
   provisioner "local-exec" {
-    command = "kubectl apply -f _output/hipster-adn.yaml"
+    command = "kubectl create namespace ${local.namespace}"
     environment = {
       KUBECONFIG = format("%s/_output/kubeconfig", path.root)
     }
+  }
+}
+
+resource "null_resource" "apply_manifest" {
+  depends_on = [local_file.this_kubeconfig, local_file.hipster_manifest, null_resource.create_namespace]
+  triggers = {
+    manifest_sha1 = sha1(local.hipster_manifest_content)
   }
   provisioner "local-exec" {
-    when    = destroy
-    command = "kubectl delete -f _output/hipster-adn.yaml --ignore-not-found=true"
+    command = "kubectl apply -f _output/hipster-adn.yaml -n ${local.namespace}"
     environment = {
       KUBECONFIG = format("%s/_output/kubeconfig", path.root)
     }
-    on_failure = continue
   }
+  # provisioner "local-exec" {
+  #   when    = destroy
+  #   command = "kubectl delete -f _output/hipster-adn.yaml -n ${local.namespace} --ignore-not-found=true"
+  #   environment = {
+  #     KUBECONFIG = format("%s/_output/kubeconfig", path.root)
+  #   }
+  #   on_failure = continue
+  # }
 }

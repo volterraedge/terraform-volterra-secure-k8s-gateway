@@ -133,9 +133,9 @@ resource "volterra_forward_proxy_policy" "this" {
     tls_list {
       exact_value = var.app_domain
     }
-    metadata {
-      name = "allow-tls-eks"
-    }
+    # metadata {
+    #   name = "allow-tls-eks"
+    # }
     default_action_next_policy = true
     default_action_deny        = false
     default_action_allow       = false
