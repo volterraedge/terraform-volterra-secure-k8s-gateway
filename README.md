@@ -68,6 +68,11 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
   export VOLT_API_URL=<team or org tenant api url>
   ```
 
+* If you are deploying onto the free tier `staging.volterra.us` tenant then you will also need to include the path to your `public_ca_cert.crt`:
+  ```bash
+  export VOLT_API_CA_CERT=<your public_server_ca.crt file>
+  ```
+
 ---
 
 ## Usage Example
