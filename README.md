@@ -9,7 +9,7 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
 ## Overview
 
-![Image of ADN Usecase](https://volterra.io/static/57304b920c496ad0c44fe148fde4d3ba/3353d/top-new.webp)
+![Image of Secure Kubernetes Gateway Usecase](https://docs.cloud.f5.com/docs/static/79e24ec420bc9193d158d20fcb23ac27/1631d/seq.webp)
 
 ---
 
@@ -61,9 +61,16 @@ This is a terraform module to create Volterra's Secure Kubernetes Gateway usecas
 
   Please follow this [doc](https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html) to install aws-iam-authenticator
 
-* Export the API certificate password as environment variable, this is needed for volterra provider to work
+* Export the API certificate password, path to your local p12 file and your api url as environment variables, this is needed for volterra provider to work
   ```bash
   export VES_P12_PASSWORD=<your credential password>
+  export VOLT_API_P12_FILE=<path to your local p12 file>
+  export VOLT_API_URL=<team or org tenant api url>
+  ```
+
+* If you are deploying onto the free tier `staging.volterra.us` tenant then you will also need to include the path to your `public_ca_cert.crt`:
+  ```bash
+  export VOLT_API_CA_CERT=<your public_server_ca.crt file>
   ```
 
 ---
@@ -139,14 +146,9 @@ terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.4.0"
+      version = "0.11.5"
     }
   }
-}
-
-provider "volterra" {
-  api_p12_file = var.api_p12_file
-  url          = var.api_url
 }
 
 module "skg" {
@@ -239,14 +241,9 @@ terraform {
   required_providers {
     volterra = {
       source = "volterraedge/volterra"
-      version = "0.3.0"
+      version = "0.11.5"
     }
   }
-}
-
-provider "volterra" {
-  api_p12_file = var.api_p12_file
-  url          = var.api_url
 }
 
 module "skg" {
@@ -281,57 +278,97 @@ output "app_url" {
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.13.1 |
-| aws | >= 3.22.0 |
-| local | >= 2.0 |
-| null | >= 3.0 |
-| volterra | 0.4.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.1 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.22.0 |
+| <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.0 |
+| <a name="requirement_volterra"></a> [volterra](#requirement\_volterra) | >= 0.11.5 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | >= 3.22.0 |
-| local | >= 2.0 |
-| null | >= 3.0 |
-| volterra | 0.4.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 3.22.0 |
+| <a name="provider_local"></a> [local](#provider\_local) | >= 2.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.0 |
+| <a name="provider_volterra"></a> [volterra](#provider\_volterra) | >= 0.11.5 |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_eks"></a> [eks](#module\_eks) | terraform-aws-modules/eks/aws | 17.24.0 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_internet_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway) | resource |
+| [aws_route.ipv4_default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.ipv6_default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_security_group_rule.eks-cluster-ingress-volterra-node](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_security_group_rule.volterra-node-eks-cluster-ingress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_subnet.eks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_subnet.volterra_ce](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
+| [local_file.hipster_manifest](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
+| [local_file.this_kubeconfig](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
+| [null_resource.apply_manifest](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [null_resource.create_namespace](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [null_resource.wait_for_aws_mns](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [volterra_app_firewall.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/app_firewall) | resource |
+| [volterra_aws_vpc_site.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/aws_vpc_site) | resource |
+| [volterra_cloud_credentials.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/cloud_credentials) | resource |
+| [volterra_discovery.eks](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/discovery) | resource |
+| [volterra_forward_proxy_policy.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/forward_proxy_policy) | resource |
+| [volterra_http_loadbalancer.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/http_loadbalancer) | resource |
+| [volterra_namespace.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/namespace) | resource |
+| [volterra_network_policy_view.sli](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/network_policy_view) | resource |
+| [volterra_network_policy_view.slo](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/network_policy_view) | resource |
+| [volterra_origin_pool.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/origin_pool) | resource |
+| [volterra_tf_params_action.apply_aws_vpc](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/resources/tf_params_action) | resource |
+| [aws_eks_cluster.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster) | data source |
+| [aws_eks_cluster_auth.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth) | data source |
+| [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/security_group) | data source |
+| [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
+| [local_file.kubeconfig](https://registry.terraform.io/providers/hashicorp/local/latest/docs/data-sources/file) | data source |
+| [volterra_namespace.this](https://registry.terraform.io/providers/volterraedge/volterra/latest/docs/data-sources/namespace) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| allow\_dns\_list | List of IP prefixes to be allowed | `list(string)` | <pre>[<br>  "8.8.8.8/32"<br>]</pre> | no |
-| allow\_tls\_prefix\_list | Allow TLS prefix list | `list(string)` | <pre>[<br>  "gcr.io",<br>  "storage.googleapis.com",<br>  "docker.io",<br>  "docker.com",<br>  "amazonaws.com"<br>]</pre> | no |
-| app\_domain | FQDN for the app. If you have delegated domain `prod.example.com`, then your app\_domain can be `<app_name>.prod.example.com` | `string` | n/a | yes |
-| aws\_access\_key | AWS Access Key. Programmable API access key needed for creating the site | `string` | n/a | yes |
-| aws\_az | AWS Availability Zone in which the site will be created | `string` | n/a | yes |
-| aws\_instance\_type | AWS instance type used for the Volterra site | `string` | `"t3.2xlarge"` | no |
-| aws\_region | AWS Region where Site will be created | `string` | n/a | yes |
-| aws\_secret\_key | AWS Secret Access Key. Programmable API secret access key needed for creating the site | `string` | n/a | yes |
-| aws\_subnet\_ce\_cidr | Map to hold different CE cidr with key as name of subnet | `map(string)` | n/a | yes |
-| aws\_subnet\_eks\_cidr | Map to hold different EKS cidr with key as desired AZ on which the subnet should exist | `map(string)` | n/a | yes |
-| aws\_vpc\_cidr | AWS VPC CIDR, that will be used to create the vpc while creating the site | `string` | n/a | yes |
-| certified\_hardware | Volterra certified hardware used to create Volterra site on AWS | `string` | `"aws-byol-multi-nic-voltmesh"` | no |
-| deny\_dns\_list | List of IP prefixes to be denied | `list(string)` | <pre>[<br>  "8.8.4.4/32"<br>]</pre> | no |
-| eks\_only | Flag to enable creation of eks cluster only, other volterra objects will be created through Volterra console | `bool` | `false` | no |
-| eks\_port\_range | EKS port range to be allowed | `list(string)` | <pre>[<br>  "30000-32767"<br>]</pre> | no |
-| enable\_hsts | Flag to enable hsts for HTTPS loadbalancer | `bool` | `false` | no |
-| enable\_redirect | Flag to enable http redirect to HTTPS loadbalancer | `bool` | `true` | no |
-| js\_cookie\_expiry | Javascript cookie expiry time in seconds | `number` | `3600` | no |
-| js\_script\_delay | Javascript challenge delay in miliseconds | `number` | `5000` | no |
-| kubeconfig\_output\_path | Ouput file path, where the kubeconfig will be stored | `string` | `"./"` | no |
-| site\_disk\_size | Disk size in GiB | `number` | `80` | no |
-| skg\_name | SKG Name. Also used as a prefix in names of related resources. | `string` | n/a | yes |
-| ssh\_public\_key | SSH Public Key | `string` | `""` | no |
-| volterra\_namespace | Volterra app namespace where the object will be created. This cannot be system or shared ns. | `string` | n/a | yes |
-| volterra\_namespace\_exists | Flag to create or use existing volterra namespace | `string` | `false` | no |
-| volterra\_site\_name | Name of the existing aws vpc site, this is used only when var eks\_only set to true | `string` | `""` | no |
-| vpc\_id | Name of the existing vpc id, this is used only when var eks\_only set to true | `string` | `""` | no |
+| <a name="input_allow_dns_list"></a> [allow\_dns\_list](#input\_allow\_dns\_list) | List of IP prefixes to be allowed | `list(string)` | <pre>[<br>  "8.8.8.8/32"<br>]</pre> | no |
+| <a name="input_allow_tls_prefix_list"></a> [allow\_tls\_prefix\_list](#input\_allow\_tls\_prefix\_list) | Allow TLS prefix list | `list(string)` | <pre>[<br>  "gcr.io",<br>  "storage.googleapis.com",<br>  "docker.io",<br>  "docker.com",<br>  "amazonaws.com"<br>]</pre> | no |
+| <a name="input_app_domain"></a> [app\_domain](#input\_app\_domain) | FQDN for the app. If you have delegated domain `prod.example.com`, then your app\_domain can be `<app_name>.prod.example.com` | `string` | n/a | yes |
+| <a name="input_aws_access_key"></a> [aws\_access\_key](#input\_aws\_access\_key) | AWS Access Key. Programmable API access key needed for creating the site | `string` | n/a | yes |
+| <a name="input_aws_az"></a> [aws\_az](#input\_aws\_az) | AWS Availability Zone in which the site will be created | `string` | n/a | yes |
+| <a name="input_aws_instance_type"></a> [aws\_instance\_type](#input\_aws\_instance\_type) | AWS instance type used for the Volterra site | `string` | `"t3.2xlarge"` | no |
+| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region where Site will be created | `string` | n/a | yes |
+| <a name="input_aws_secret_key"></a> [aws\_secret\_key](#input\_aws\_secret\_key) | AWS Secret Access Key. Programmable API secret access key needed for creating the site | `string` | n/a | yes |
+| <a name="input_aws_subnet_ce_cidr"></a> [aws\_subnet\_ce\_cidr](#input\_aws\_subnet\_ce\_cidr) | Map to hold different CE cidr with key as name of subnet | `map(string)` | n/a | yes |
+| <a name="input_aws_subnet_eks_cidr"></a> [aws\_subnet\_eks\_cidr](#input\_aws\_subnet\_eks\_cidr) | Map to hold different EKS cidr with key as desired AZ on which the subnet should exist | `map(string)` | n/a | yes |
+| <a name="input_aws_vpc_cidr"></a> [aws\_vpc\_cidr](#input\_aws\_vpc\_cidr) | AWS VPC CIDR, that will be used to create the vpc while creating the site | `string` | n/a | yes |
+| <a name="input_certified_hardware"></a> [certified\_hardware](#input\_certified\_hardware) | Volterra certified hardware used to create Volterra site on AWS | `string` | `"aws-byol-multi-nic-voltmesh"` | no |
+| <a name="input_deny_dns_list"></a> [deny\_dns\_list](#input\_deny\_dns\_list) | List of IP prefixes to be denied | `list(string)` | <pre>[<br>  "8.8.4.4/32"<br>]</pre> | no |
+| <a name="input_eks_only"></a> [eks\_only](#input\_eks\_only) | Flag to enable creation of eks cluster only, other volterra objects will be created through Volterra console | `bool` | `false` | no |
+| <a name="input_eks_port_range"></a> [eks\_port\_range](#input\_eks\_port\_range) | EKS port range to be allowed | `list(string)` | <pre>[<br>  "30000-32767"<br>]</pre> | no |
+| <a name="input_enable_hsts"></a> [enable\_hsts](#input\_enable\_hsts) | Flag to enable hsts for HTTPS loadbalancer | `bool` | `false` | no |
+| <a name="input_enable_redirect"></a> [enable\_redirect](#input\_enable\_redirect) | Flag to enable http redirect to HTTPS loadbalancer | `bool` | `true` | no |
+| <a name="input_js_cookie_expiry"></a> [js\_cookie\_expiry](#input\_js\_cookie\_expiry) | Javascript cookie expiry time in seconds | `number` | `3600` | no |
+| <a name="input_js_script_delay"></a> [js\_script\_delay](#input\_js\_script\_delay) | Javascript challenge delay in miliseconds | `number` | `5000` | no |
+| <a name="input_kubeconfig_output_path"></a> [kubeconfig\_output\_path](#input\_kubeconfig\_output\_path) | Ouput file path, where the kubeconfig will be stored | `string` | `"./"` | no |
+| <a name="input_site_disk_size"></a> [site\_disk\_size](#input\_site\_disk\_size) | Disk size in GiB | `number` | `80` | no |
+| <a name="input_skg_name"></a> [skg\_name](#input\_skg\_name) | SKG Name. Also used as a prefix in names of related resources. | `string` | n/a | yes |
+| <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | SSH Public Key | `string` | `""` | no |
+| <a name="input_volterra_namespace"></a> [volterra\_namespace](#input\_volterra\_namespace) | Volterra app namespace where the object will be created. This cannot be system or shared ns. | `string` | n/a | yes |
+| <a name="input_volterra_namespace_exists"></a> [volterra\_namespace\_exists](#input\_volterra\_namespace\_exists) | Flag to create or use existing volterra namespace | `string` | `false` | no |
+| <a name="input_volterra_site_name"></a> [volterra\_site\_name](#input\_volterra\_site\_name) | Name of the existing aws vpc site, this is used only when var eks\_only set to true | `string` | `""` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | Name of the existing vpc id, this is used only when var eks\_only set to true | `string` | `""` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| app\_url | Domain VIP to access the app deployed on EKS |
-| kubeconfig\_filename | EKS kubeconfig file name |
-
+| <a name="output_app_url"></a> [app\_url](#output\_app\_url) | Domain VIP to access the app deployed on EKS |
+| <a name="output_kubeconfig_filename"></a> [kubeconfig\_filename](#output\_kubeconfig\_filename) | EKS kubeconfig file name |
