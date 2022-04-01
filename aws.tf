@@ -70,10 +70,11 @@ resource "aws_route" "ipv4_default" {
 
 
 resource "aws_subnet" "volterra_ce" {
-  for_each          = var.eks_only ? {} : var.aws_subnet_ce_cidr
-  vpc_id            = local.vpc_id
-  cidr_block        = each.value
-  availability_zone = var.aws_az
+  for_each                = var.eks_only ? {} : var.aws_subnet_ce_cidr
+  vpc_id                  = local.vpc_id
+  cidr_block              = each.value
+  availability_zone       = var.aws_az
+  map_public_ip_on_launch = true
   tags = {
     "Name"        = format("%s-%s", var.skg_name, each.key)
     "usecase"     = "secure-k8s-gateway"
@@ -83,11 +84,12 @@ resource "aws_subnet" "volterra_ce" {
 
 
 resource "aws_subnet" "eks" {
-  depends_on        = [volterra_tf_params_action.apply_aws_vpc]
-  for_each          = var.aws_subnet_eks_cidr
-  vpc_id            = local.vpc_id
-  cidr_block        = each.value
-  availability_zone = each.key
+  depends_on              = [volterra_tf_params_action.apply_aws_vpc]
+  for_each                = var.aws_subnet_eks_cidr
+  vpc_id                  = local.vpc_id
+  cidr_block              = each.value
+  availability_zone       = each.key
+  map_public_ip_on_launch = true
   tags = {
     "Name"                                           = format("%s-%s", var.skg_name, each.key)
     "usecase"                                        = "secure-k8s-gateway"
