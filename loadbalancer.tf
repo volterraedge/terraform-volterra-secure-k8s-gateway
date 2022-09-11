@@ -1,5 +1,5 @@
 data "volterra_namespace" "this" {
-  count = var.volterra_namespace_exists && !var.eks_only ? 1 : 0
+  count = var.volterra_namespace_exists || var.eks_only ? 1 : 0
   name  = var.volterra_namespace
 }
 
