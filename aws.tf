@@ -100,7 +100,7 @@ resource "aws_subnet" "eks" {
 data "aws_security_group" "this" {
   for_each = toset(var.eks_only ? [var.skg_name] : [])
   filter {
-    name   = "tag:ves.io/site_name"
+    name   = "tag:ves-io-site-name"
     values = [var.volterra_site_name]
   }
   vpc_id = var.vpc_id
